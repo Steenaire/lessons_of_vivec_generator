@@ -1,0 +1,1 @@
+A Markov chain for generating new Lessons of Vivec
