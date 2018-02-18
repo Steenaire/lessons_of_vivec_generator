@@ -1,5 +1,3 @@
-require 'bigdecimal'
-
 words_hash = {}
 line_words_array = []
 all_words_array = []
@@ -17,10 +15,11 @@ text_directory = ARGV[0]
 puts text_directory
 
 Dir.glob("*/*.txt") do |file_location|
+  wordcount_tally = 0
   File.open(file_location, 'r') do |file|
     file.each_line do |line|
       line_words_array = line.split(" ")
-      wordcounts << line_words_array.length
+      wordcount_tally += line_words_array.length
       if line_words_array.any?
         line_words_array.each_with_index do |word, word_index|
           if words_hash["#{word}"] && word_index < line_words_array.length-1
@@ -32,12 +31,16 @@ Dir.glob("*/*.txt") do |file_location|
             words_hash["#{word}"] = [line_words_array[word_index+1]]
             words_popularity_hash["#{word}"] = 1
           end
+          #Also stores opening words in their own special array, so the text can be opened appropriately
           opening_words_array << word if word_index == 0
         end
       end
     end
   end
+  wordcounts << wordcount_tally
 end
+
+# puts wordcounts
 
 words_hash.each do |word, following_words|
   # file.write("#{word}\t#{following_words}\n")
@@ -62,12 +65,20 @@ end
 #   end
 # end
 
+# Picks an opener from the opening words
 random_word = opening_words_array.sample
 
-# word_count_average = .reduce(:+).to_f / list.size
+word_count_average = wordcounts.reduce(:+).to_f / wordcounts.size
+word_count_deviation = (word_count_average*0.1).round(0)
+
+# Generates a word count based on the average word count of the documents, then adds or subtracts within a range of -10% and +10%
+word_count = (word_count_average + rand(-word_count_deviation..word_count_deviation)).to_i
+
+new_lesson = File.open("new_lesson.txt", 'w')
 
 print "#{random_word.capitalize} "
-200.times do
+new_lesson.write("#{random_word.capitalize} ")
+word_count.times do
   if probabilities_hash[random_word]
     probabilities_hash[random_word].each do |following_word, probability|
       probability.times do
@@ -76,21 +87,28 @@ print "#{random_word.capitalize} "
     end
     random_word = randomizer_words_array.sample
     print "#{random_word.chomp(')').chomp('(')} "
+    new_lesson.write("#{random_word.chomp(')').chomp('(')} ")
     randomizer_words_array = []
   else
     puts "\n"
     random_word = opening_words_array.sample
     print "#{random_word.capitalize} "
+    new_lesson.write("\n#{random_word.capitalize} ")
   end
 end
 
+new_lesson.write("\nThe ending of the words is ALMSIVI.")
 
-file = File.open("word_breakdown.txt", 'w')
+new_lesson.close
 
-probabilities_hash.each do |word, probabilities|
-  file.write("#{word};\t")
-  probabilities.each do |following_word, probability|
-    file.write("#{following_word}: #{probability}, ")
-  end
-  file.write("\n")
-end
+# file = File.open("word_breakdown.txt", 'w')
+
+# probabilities_hash.each do |word, probabilities|
+#   file.write("#{word};\t")
+#   probabilities.each do |following_word, probability|
+#     file.write("#{following_word}: #{probability}, ")
+#   end
+#   file.write("\n")
+# end
+
+# file.close
