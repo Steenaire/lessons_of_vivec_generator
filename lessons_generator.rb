@@ -8,17 +8,19 @@ words_popularity_hash = {}
 
 probabilities_hash = {}
 
+wordcounts = []
+
 randomizer_words_array = []
 opening_words_array = []
 
 text_directory = ARGV[0]
 puts text_directory
 
-Dir[text_directory].each do |file_location|
-  puts "hi"
+Dir.glob("*/*.txt") do |file_location|
   File.open(file_location, 'r') do |file|
     file.each_line do |line|
       line_words_array = line.split(" ")
+      wordcounts << line_words_array.length
       if line_words_array.any?
         line_words_array.each_with_index do |word, word_index|
           if words_hash["#{word}"] && word_index < line_words_array.length-1
@@ -61,6 +63,8 @@ end
 # end
 
 random_word = opening_words_array.sample
+
+# word_count_average = .reduce(:+).to_f / list.size
 
 print "#{random_word.capitalize} "
 200.times do
