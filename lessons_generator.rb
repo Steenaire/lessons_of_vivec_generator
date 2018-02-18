@@ -10,10 +10,13 @@ wordcounts = []
 
 randomizer_words_array = []
 opening_words_array = []
+#closing_words_array = []
 
-text_directory = ARGV[0]
-puts text_directory
+# text_directory = ARGV[0]
+# I originally had it so you could put in the dir through ARGV, but this only worked on Linux and not Windows for some reason
+# Basically, for cross-platform standardization, just put all your lessons in a sub-directory
 
+# Iterates over all the files, and logs which words are likely to follow which, and gets all the wordcounts
 Dir.glob("*/*.txt") do |file_location|
   wordcount_tally = 0
   File.open(file_location, 'r') do |file|
@@ -33,14 +36,14 @@ Dir.glob("*/*.txt") do |file_location|
           end
           #Also stores opening words in their own special array, so the text can be opened appropriately
           opening_words_array << word if word_index == 0
+          #I considered doing closing words the same way as opening words, but decided against it because it might be even weirder than Markov
+          #closing_words_array << word if word_index == line_words_array.length-1
         end
       end
     end
   end
   wordcounts << wordcount_tally
 end
-
-# puts wordcounts
 
 words_hash.each do |word, following_words|
   # file.write("#{word}\t#{following_words}\n")
@@ -59,12 +62,6 @@ words_hash.each do |word, following_words|
     all_words_array << word
 end
 
-# words_popularity_hash.each do |word, count|
-#   count.times do
-#     randomizer_words_array << word
-#   end
-# end
-
 # Picks an opener from the opening words
 random_word = opening_words_array.sample
 
@@ -78,14 +75,22 @@ new_lesson = File.open("new_lesson.txt", 'w')
 
 print "#{random_word.capitalize} "
 new_lesson.write("#{random_word.capitalize} ")
+counter = 0
 word_count.times do
+  counter += 1
+
   if probabilities_hash[random_word]
     probabilities_hash[random_word].each do |following_word, probability|
       probability.times do
         randomizer_words_array << following_word
       end
     end
-    random_word = randomizer_words_array.sample
+    if counter == word_count
+      # If it is the last word, strip out all punctuation that may/may not be there, and add a period, just to be safe
+      random_word = "#{randomizer_words_array.sample.gsub(/[^\w\s\d]/, '')}."
+    else
+      random_word = randomizer_words_array.sample
+    end
     print "#{random_word.chomp(')').chomp('(')} "
     new_lesson.write("#{random_word.chomp(')').chomp('(')} ")
     randomizer_words_array = []
@@ -97,18 +102,7 @@ word_count.times do
   end
 end
 
+print "\nThe ending of the words is ALMSIVI."
 new_lesson.write("\nThe ending of the words is ALMSIVI.")
 
 new_lesson.close
-
-# file = File.open("word_breakdown.txt", 'w')
-
-# probabilities_hash.each do |word, probabilities|
-#   file.write("#{word};\t")
-#   probabilities.each do |following_word, probability|
-#     file.write("#{following_word}: #{probability}, ")
-#   end
-#   file.write("\n")
-# end
-
-# file.close
